@@ -3,6 +3,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { DynamodbModule } from './dynamodb/dynamodb.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { MovieModule } from './movie/movie.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
         },
       }),
     }),
+    MovieModule,
   ],
   controllers: [AppController],
   providers: [AppService],
