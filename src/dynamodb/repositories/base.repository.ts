@@ -59,6 +59,11 @@ export abstract class BaseRepository<T> {
     return result as QueryOutput<T, TParams>;
   }
 
+  async count(params: QueryInput<T>): Promise<number> {
+    const outputs = await this.queryAll({ ...params, Select: 'COUNT' });
+    return outputs.reduce((acc, { Count }) => acc + (Count ?? 0), 0);
+  }
+
   protected async queryAll(
     params: QueryInput<T>,
   ): Promise<QueryCommandOutput[]> {
