@@ -3,6 +3,7 @@ import {
   GetCommand,
   QueryCommand,
   QueryCommandInput,
+  QueryCommandOutput,
 } from '@aws-sdk/lib-dynamodb';
 import { Injectable } from '@nestjs/common';
 
@@ -48,6 +49,19 @@ export abstract class BaseRepository<T> {
   ): Promise<QueryOutput<T, TParams>> {
     const result: any[] = [];
 
+    const outputs = await this.queryAll(params);
+    outputs.forEach(({ Items }) => {
+      if (Items) {
+        result.push(...Items);
+      }
+    });
+
+    return result as QueryOutput<T, TParams>;
+  }
+
+  protected async queryAll(
+    params: QueryInput<T>,
+  ): Promise<QueryCommandOutput[]> {
     const queryParams: QueryCommandInput = {
       ...params,
       TableName: this.tableName,
@@ -71,17 +85,14 @@ export abstract class BaseRepository<T> {
       };
     }
 
-    do {
-      const { Items, LastEvaluatedKey } = await this.docClient.send(
-        new QueryCommand(queryParams),
-      );
-      if (Items) {
-        result.push(...Items);
-      }
+    const result: QueryCommandOutput[] = [];
 
-      queryParams.ExclusiveStartKey = LastEvaluatedKey;
+    do {
+      const output = await this.docClient.send(new QueryCommand(queryParams));
+      result.push(output);
+      queryParams.ExclusiveStartKey = output.LastEvaluatedKey;
     } while (queryParams.ExclusiveStartKey);
 
-    return result as QueryOutput<T, TParams>;
+    return result;
   }
 }
